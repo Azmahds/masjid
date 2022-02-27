@@ -1,10 +1,12 @@
 module.exports = {
     ensureAuth: function (req, res, next) {
-        if(req.session.user) {
-            console.log(req.session.user);
+        if(req.session.user && req.session.user.type === "admin") {
             return next();
         } else {
-            res.status(401).send("Unauthorized");
+            // console.log("GOOGLE Ids: ",req.session.user, req.body )
+            if(req.session.user.googleId && req.session.user.type === "user"){
+                return next();
+            }
         }
     },
     ensureGuest: function (req, res, next) {

@@ -92,6 +92,11 @@ const MemberSchema = new mongoose.Schema({
         required: false,
         trim: true
     },
+    GoogleID: {
+        type: String,
+        required: false,
+        trim: true
+    },
     createAt: {
         type: Date,
         default: Date.now

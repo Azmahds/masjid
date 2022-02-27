@@ -16,25 +16,23 @@ import StateSelector from './helper/stateselector.jsx'
 import './css_stuff/myaccount.css'
 
 class MyAccount extends Component {
-
   state = {
-    modalShow: false,
-    memberShow: false,
-    myaccount: {Dependents: []},
-    register: {},
-    tempdependent: {},
-    dependents: [],
-    depArrSize: 0,
-    changeDepArr: false,
-    error: "",
-    errors: []
+      modalShow: false,
+      memberShow: false,
+      myaccount: {Dependents: []},
+      tempdependent: {},
+      dependents: [],
+      depArrSize: 0,
+      changeDepArr: false,
+      error: "",
+      errors: []
   };
 
   //LOADS DATA INTO MYACCOUNT
   async componentDidMount() {
     try {
-      const res = await axios.get('members/' + localStorage.idOfMember);{/*members/id syntax for id 614915b63d1e5066b0675a94*/}
-      this.setState({myaccount: res.data, error: ""});
+      const res = await axios.get('members/' + localStorage.googleId + '/by-google-id');{/*members/id syntax for id*/}
+      this.setState({myaccount: res.data, dependents: res.data.Dependents, error: ""});
     } catch (e) {
       this.setState({error: e.message});
       console.error(e);
@@ -43,7 +41,6 @@ class MyAccount extends Component {
 
   //REGISTER NEW MEMBER
   async saveNewMember(m) {
-    console.log("Save new member - ", m);
     if (m.Firstname && m.Firstname.length > 0 &&
         m.Lastname && m.Lastname.length > 0 &&
         m.HouseNo && m.HouseNo.length > 0 &&
@@ -51,17 +48,14 @@ class MyAccount extends Component {
 
         let dependents = [...m.Dependents];
         m.Dependents = [];
+        m.GoogleID = localStorage.googleId;
         const res = await axios.post('/members', m);
-        const member = await axios.get('/members' + res.data._id);  
         
-        if(!localStorage.idOfMember){
-          localStorage.idOfMember = res.data._id;
-        }
 
         if(dependents.length > 0){
           for(var i = 0; i < dependents.length; ++i){
-            dependents[i].Guardians.push(member._id);
-            this.saveNewDependent(dependents[i], member);
+            dependents[i].Guardians.push(res.data._id);
+            await this.saveNewDependent(dependents[i], res.data);
           }
         } else{
           this.setState({myaccount: res.data});
@@ -78,10 +72,8 @@ class MyAccount extends Component {
 
         const res = await axios.post('/members', m);  
         
-        let myAccount;
-        if(account){myAccount = account;}
-        else{myAccount = this.state.myaccount;}
-        myAccount.Dependents.push(res.data);
+        let myAccount = account;
+        account.Dependents.push(res.data);
         this.handleEditSave(myAccount, true);
     }
   }
@@ -90,12 +82,19 @@ class MyAccount extends Component {
   async saveUpdatedMember(m) {
     try {
       await axios.put('members/' + m._id, m);
-      const member = await axios.get('members/' + m._id)
+      const member = await axios.get('members/' + localStorage.googleId + '/by-google-id'); 
+      console.log("IN SAVE", member, m)
       this.setState({myaccount: member.data})
       // TODO: update with the member details returned from server? 
     } catch (error) {
       console.error(error);
     }
+  }
+
+  saveNewMem = (m) => {
+    console.log("Save New Member - ", m);
+    this.saveNewMember(m);
+    this.hideMemberEditDialog();
   }
 
   //HANDLES SAVING EDITED MEMBERS/DEPENDENTS AND SAVING NEW DEPENDENTS
@@ -106,6 +105,7 @@ class MyAccount extends Component {
         member = this.state.myaccount; //SET MEMBER TO MYACCOUNT
       } else {
         member = this.state.dependents.find(el => el._id === m._id); //SET MEMBER TO DEPENDENT
+        if(member){member.GoogleID = this.state.myaccount.GoogleID;}
       }
       if(member) { //UPDATE MEMBER/DEPENDENT
         member.Firstname = m.Firstname;
@@ -135,13 +135,13 @@ class MyAccount extends Component {
           let newDep = [...this.state.dependents];
           newDep.splice(this.state.dependents.findIndex(el => el._id === member._id), 1);
           newDep.push(member);
-          this.setState({dependents: newDep},
-            this.fillDependentArray());
+          this.setState({dependents: newDep});
         }
       } else{ //ADD NEW DEPENDENT
         console.log("Save dependent - ", m);
+        m.GoogleID = this.state.myaccount.GoogleID;
         m.Guardians.push(this.state.myaccount._id);
-        this.saveNewDependent(m);
+        this.saveNewDependent(m, this.state.myaccount);
       }
     }
     catch (error) {
@@ -213,6 +213,7 @@ class MyAccount extends Component {
     // this.hideMemberEditDialog();
     console.log("Update member - ", m);
     this.saveUpdatedMember(m, true);
+    // window.location.reload();
   }
 
   editMember = () => {
@@ -311,6 +312,7 @@ class MyAccount extends Component {
     return age;
   }
 
+
   render () {
     let detailPage, dependentPage;
 
@@ -318,13 +320,9 @@ class MyAccount extends Component {
     var editaccount = {...thisaccount};
     const dependent = this.state.myaccount.Dependents;
 
-    // console.log("LOCALstorage", localStorage);
-    // localStorage.id = null;
-    
     if(editaccount.Firstname && editaccount.Firstname === this.state.myaccount.Firstname){
-      detailPage  = 
+      detailPage = 
       <React.Fragment>
-        
         {/* Personal Information Below */}
         <h4 className="ml-3">
           Personal Information 
@@ -338,8 +336,9 @@ class MyAccount extends Component {
             <Form.Group className="mb-4" >
               <Form.Label>First Name</Form.Label>
               <Form.Control 
-                defaultValue={thisaccount.Firstname} 
+                defaultValue={thisaccount.Firstname.toLocaleUpperCase()} 
                 onChange={(e) => {
+                  e.target.value = e.target.value.toLocaleUpperCase();
                   thisaccount.Firstname = e.target.value.toLocaleUpperCase();
                 }} 
                 className="detailSelWid" 
@@ -350,8 +349,17 @@ class MyAccount extends Component {
               <Form.Control 
                 defaultValue={thisaccount.DateOfBirth} 
                 onChange={(e) => {
-                  if(e.target.value.length > 1){
-                    if(e.target.value.indexOf('/') === -1 || e.target.value.length > 4 && !e.target.value.substr(4).includes('/')){
+                  if(isNaN(e.nativeEvent.data) || e.target.value.length > 10){
+                    e.target.value = e.target.value.slice(0,-1);
+                    // for(let i = 0; i < e.target.value.length; i++){
+                    //   if(isNaN(e.target.value[i]) && e.target.value[i] !== '/'){
+                    //     console.log(e.target.value[i])
+                    //     e.target.value = e.target.value.slice(i-1,1);
+                    //   }
+                    // }
+                  }
+                  if(e.nativeEvent.inputType === "insertText"){
+                    if(e.target.value.length === 2 || e.target.value.length === 5){
                       e.target.value += "/"
                     }
                   }
@@ -368,6 +376,7 @@ class MyAccount extends Component {
                 <Form.Control 
                   defaultValue={thisaccount.Lastname} 
                   onChange={(e) => {
+                    e.target.value = e.target.value.toLocaleUpperCase();
                     thisaccount.Lastname = e.target.value.toLocaleUpperCase();
                   }} 
                   className="detailSelWid" 
@@ -377,9 +386,7 @@ class MyAccount extends Component {
                 <Form.Label>Gender</Form.Label>
                 <Form.Control            
                   defaultValue={thisaccount.Gender} 
-                  onChange={(e) => {
-                    thisaccount.Gender = e.target.value.toLocaleUpperCase();
-                  }}             
+                  onChange={(e) => {}}             
                   className="detailSelWid" 
                   as="select"
                   disabled>
@@ -395,9 +402,7 @@ class MyAccount extends Component {
               <Form.Control  
                 defaultValue={thisaccount.Spouse}
                 className="detailSelWid"
-                onChange={(e) => {
-                  thisaccount.Spouse = e.target.value.toLocaleUpperCase();
-                }}  
+                onChange={(e) => {}}  
                 as="select"
                 disabled>
                   <option value="No">No</option>
@@ -427,6 +432,7 @@ class MyAccount extends Component {
                 <Form.Control 
                   defaultValue={thisaccount.City} 
                   onChange={(e) => {
+                    e.target.value = e.target.value.toLocaleUpperCase();
                     thisaccount.City = e.target.value.toLocaleUpperCase();
                   }} 
                   className="detailSelWid" 
@@ -439,6 +445,7 @@ class MyAccount extends Component {
               <Form.Control
                 defaultValue={this.state.myaccount.Street}
                 onChange={(e) => {
+                  e.target.value = e.target.value.toLocaleUpperCase();
                   thisaccount.Street = e.target.value.toLocaleUpperCase();
                 }}
                 className="detailSelWid" 
@@ -568,8 +575,8 @@ class MyAccount extends Component {
         </div>
       </React.Fragment>
     }
-
-    if(thisaccount.Dependents.length > 0){
+    
+    if(thisaccount.Dependents && thisaccount.Dependents.length > 0){
       dependentPage =
         <React.Fragment>
           <h4 className="ml-3">
@@ -620,7 +627,6 @@ class MyAccount extends Component {
         </React.Fragment>
         }
 
-
     return (
       <React.Fragment>
         <DependentEdit
@@ -633,12 +639,12 @@ class MyAccount extends Component {
         />
 
         <MemberEdit
-          member={this.state.register}
+          member={this.state.myaccount}
           show={this.state.memberShow}
           onDependentShow={this.hideMemberEditDialog}
           onDependentHide={this.showMemberEditDialog}
           onCancel={this.hideMemberEditDialog}
-          onSave={this.saveNewMember}
+          onSave={this.saveNewMem}
           myAccount={false}
           registerMember={true}
         />

@@ -17,6 +17,19 @@ class Navigation extends Component {
     render() {
         const email = localStorage.user_email;
         const loginStr = email ? "logout" : "login";
+        const navBar = (localStorage.type == "admin") ? 
+              <React.Fragment>
+              <LinkContainer to="/members">
+              <Nav.Link href="/members">members</Nav.Link>
+              </LinkContainer>
+              <LinkContainer to="/printout">
+                <Nav.Link href="/printout">printout</Nav.Link>
+              </LinkContainer>
+              <LinkContainer to="/export">
+                <Nav.Link href="/export">export</Nav.Link>
+              </LinkContainer>
+              </React.Fragment>
+              : <React.Fragment></React.Fragment>
     return (
       <Navbar bg="light" expand="lg" sticky="top">
         <Navbar.Brand href="/">Masjid Membership</Navbar.Brand>
@@ -29,15 +42,7 @@ class Navigation extends Component {
             </LinkContainer>
             <LinkContainer to="/payment"><Nav.Link href="/payment">payment</Nav.Link></LinkContainer>
             <LinkContainer to="/myaccount"><Nav.Link href="/myaccount">my account</Nav.Link></LinkContainer>
-            <LinkContainer to="/members">
-              <Nav.Link href="/members">members</Nav.Link>
-            </LinkContainer>
-            <LinkContainer to="/printout">
-              <Nav.Link href="/printout">printout</Nav.Link>
-            </LinkContainer>
-            <LinkContainer to="/export">
-              <Nav.Link href="/export">export</Nav.Link>
-            </LinkContainer>
+            {navBar}
             <LinkContainer to="/login">
               <Nav.Link href="/login">{loginStr}</Nav.Link>
             </LinkContainer>

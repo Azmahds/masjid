@@ -12,15 +12,76 @@ import './css_stuff/memberedit.css';
 
 
 class DependentEdit extends Component {
+  state = {
+    errors: []
+  };
+
   handleSave = (e) => {
     if(this.props.myAccount){
+      console.log('1')
       this.props.onSave(this.props.member, false);
-    } else{this.props.addDependent(this.props.member);}
+    } else{
+      this.props.addDependent(this.props.member);
+    }
     this.props.onCancel();
   }
   
   handleCancel = () => {
     this.props.onCancel();
+  }
+
+  resetErrors = () => {
+    this.setState({errors: []}, this.checkErrors())
+  }
+
+  checkErrors = () => {
+    let errorArr = [];
+    if(!this.props.member.Firstname){
+      errorArr.push("Enter First Name!");
+    }
+
+    if(!this.props.member.Lastname){
+      errorArr.push("Enter Last Name!");
+    }
+
+    if(this.props.member.PhoneNum){
+      if(this.props.member.PhoneNum.length < 10 || this.props.member.PhoneNum.length > 11){errorArr.push("Invalid Phone Number!");}
+    }
+    
+    if(this.props.member.Email){
+      if(!this.props.member.Email.includes('@')){errorArr.push("Invalid Email!");}
+    } 
+
+    if(!this.props.member.HouseNo){
+      errorArr.push("Enter House Number!");
+    }
+
+    if(!this.props.member.Street){
+      errorArr.push("Enter Street Name!");
+    }
+
+    if(!this.props.member.City){
+      errorArr.push("Enter City Name!");
+    }
+    
+    if(!this.props.member.Country){
+      errorArr.push("Select Country!");
+    }
+    
+    if(!this.props.member.Postcode){
+      errorArr.push("Enter Zipcode!");
+    } else if(this.props.member.Postcode.length !== 5){errorArr.push("Invalid Zipcode!");}
+
+    if(!this.props.member.DateOfBirth){
+      errorArr.push("Enter Date of Birth!");
+    } else if(this.props.member.DateOfBirth.indexOf('/') !== 2 || this.props.member.DateOfBirth.lastIndexOf('/') !== 5){errorArr.push("Invalid Date of Birth! Use format mm/dd/yyyy")}
+
+    if(!this.props.member.Relationship){
+      errorArr.push("Enter Relationship!");
+    }
+
+    this.state.errors = errorArr;
+    this.setState({errors: errorArr});
   }
 
   render() {
@@ -188,7 +249,14 @@ class DependentEdit extends Component {
                   placeholder="mm/dd/yyyy"
                   aria-label="DoB"
                   aria-describedby="DoB"
-                  onChange={e => this.props.member.DateOfBirth = e.target.value.toLocaleUpperCase() }
+                  onChange={e => {
+                    if(e.target.value.length > 1){
+                      if(e.target.value.indexOf('/') === -1 || e.target.value.length > 4 && !e.target.value.substr(4).includes('/')){
+                        e.target.value += "/"
+                      }
+                    }
+                    this.props.member.DateOfBirth = e.target.value; 
+                  }}
                   defaultValue={(this.props.member.DateOfBirth) ? this.props.member.DateOfBirth : ""}
                   className="mr-2"
                 />
@@ -265,7 +333,26 @@ class DependentEdit extends Component {
       <Modal.Footer>
         {/* <Button variant="link" className="depButton">Add Dependent</Button> */}
         <Button variant="secondary" onClick={this.handleCancel}>Cancel</Button>
-        <Button variant="primary" onClick={this.handleSave}>Save</Button>
+        <Button variant="primary" onClick={
+          () => {
+            this.resetErrors(); 
+            
+            if(this.state.errors.length > 0){
+              let allErrors = "";
+              let error = this.state.errors;
+              for(var i = 0; i < this.state.errors.length; ++i){
+                allErrors += error[i];
+                if(i + 1 !== this.state.errors.length){
+                  allErrors += '\n'
+                }
+              }
+              alert(allErrors);
+            }
+            else{
+              this.handleSave();
+            }
+          }
+        }>Save</Button>
       </Modal.Footer>
     </Modal>
   );}

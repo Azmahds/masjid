@@ -142,7 +142,7 @@ const PaginationTable = (props) => {
   return (
     <React.Fragment>
       <div>
-      <FormControl as="select" value="EXPORT" className="export" onChange={(e) => {
+      <FormControl as="select" value="EXPORT" className="export mb-3" onChange={(e) => {
                 if(e.target.value === "allcsv"){exportData("csv", true);}
                 else if(e.target.value === "curcsv"){exportData("csv", false);}
                 else if(e.target.value === "allxlsx"){exportData("xlsx", true);}
@@ -165,13 +165,14 @@ const PaginationTable = (props) => {
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-around",
+            position: "relative"
           }}
           class="FilterTable ml-4"
         >
           <div>
             <h4 class="center mt-3">Filter</h4>
             <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter}/>
-            <Checkbox className="ml-2 mt-4" {...getToggleHideAllColumnsProps()} /> ToggleAll
+            <Checkbox className="ml-4 mt-2" {...getToggleHideAllColumnsProps()} /> ToggleAll
           </div>
           {allColumns.map((column) => (
             (column.checked) ?
@@ -180,7 +181,7 @@ const PaginationTable = (props) => {
                 type='checkbox'
                 label={column.Header}
                 id={column.Header + "check"}
-                className="ml-2 mr-5"
+                className="ml-4 mb-3"
                 {...column.getToggleHiddenProps()}
               />
             </div>

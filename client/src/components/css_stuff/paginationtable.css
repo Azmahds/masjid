@@ -1,15 +1,15 @@
 .td {
-    padding: 0px;
-  }
+  padding: 0px;
+}
 
-  .tableHead {
-    background-color:darkcyan;
-  }
+.tableHead {
+  background-color:darkcyan;
+}
 
-  .table {
-    text-align: center;
-    width: 75%;
-  }
+.table {
+  text-align: center;
+  width: 75%;
+}
 
 .export {
   width: 10%;

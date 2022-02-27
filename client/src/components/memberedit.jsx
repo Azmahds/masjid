@@ -33,7 +33,6 @@ class MemberEdit extends Component {
     } 
     else if(this.props.registerMember){
       this.props.member.Dependents = [...this.state.dependents];
-      console.log("mem2", this.props.member, this.state.dependents)
       this.props.onSave(this.props.member);
     }
     else if(!this.state.isNewMember) {
@@ -460,7 +459,7 @@ class MemberEdit extends Component {
             <Button variant="primary" onClick={
               () => {
                 this.resetErrors(); 
-                // this.checkErrors();
+                
                 if(this.state.errors.length > 0){
                   let allErrors = "";
                   let error = this.state.errors;
@@ -488,7 +487,7 @@ class MemberEdit extends Component {
               onClick={
                 () => {
                 this.resetErrors(); 
-                // this.checkErrors();
+                
                 if(this.state.errors.length > 0){
                   let allErrors = "";
                   let error = this.state.errors;

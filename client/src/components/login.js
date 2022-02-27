@@ -1,15 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Container from "react-bootstrap/Container";
 import Card from "react-bootstrap/Card";
 import { GoogleLogin, GoogleLogout } from "react-google-login";
 import axios from "axios";
+import { syncBuiltinESMExports } from "module";
 
 const clientId =
   "243164022181-l55t6hhcgbup7p25q94c6pfqkpnkd179.apps.googleusercontent.com";
 
+
 function Login() {
   const [loading, setLoading] = useState("Loading...");
   const [user, setUser] = useState(null);
+
   const handleLoginSuccess = async (response) => {
     try {
       setUser(response.profileObj);
@@ -29,6 +32,10 @@ function Login() {
       localStorage.user_displayName = res.data.displayName;
       localStorage.user_email = res.data.email;
       localStorage.googleId = res.data.googleId;
+      localStorage.type = res.data.type
+      if(!loading){
+        redirectToHome();
+      }
     } catch (error) {
       console.log(error);
     }
@@ -42,6 +49,7 @@ function Login() {
   const handleLogoutSuccess = async () => {
     try {
       setUser(null);
+
       localStorage.removeItem("user_displayName");
       await axios.delete("/auth/logout");
     } catch (error) {
@@ -61,10 +69,14 @@ function Login() {
     setLoading();
   };
 
+  const redirectToHome = () => {
+    window.location.href="/";
+  };
+  
   return (
     <Container className="col-lg-4 col-md-4 col-sm-4 justify-content-center">
       <br />
-      {user ? (
+      {user ? ( 
         <Card>
           <Card.Header>Welcome {user.name}!</Card.Header>
           <Card.Body>

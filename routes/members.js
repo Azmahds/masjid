@@ -4,12 +4,22 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const {ensureAuth} = require('../middleware/auth');
 const Member = require('../models/Member');
+const AuthorisedUser = require('../models/AuthorisedUser');
 
 const ObjectID = mongodb.ObjectID;
 
 // Get all members
-router.get('/', ensureAuth, async (req, res) => {
+router.get('/ensure-admin-request', ensureAuth, async (req, res) => {
     try {
+        const authoriseduser = await AuthorisedUser.findOne(
+            { googleId: req.session.user.googleId }
+        ).lean();
+        
+        if(!authoriseduser){
+            console.log("Not authorised user!");
+            return res.status(500).send("Not authorised user!");
+        }
+
         const members = await Member.find({})
             .populate('user')
             .sort('Street')
@@ -25,17 +35,26 @@ router.get('/', ensureAuth, async (req, res) => {
 });
 
 // Get a member
-router.get('/:id', ensureAuth, async (req, res) => {
+router.get('/:id/by-google-id', ensureAuth, async (req, res) => { // TO GET OTHER FIELD, use find({google_id: id_value})
     try {
-        let member = await Member.findById(req.params.id) //use this function call to get dependents
+
+        let member = await Member.find({GoogleID: req.params.id}) //use this function call to get dependents
             .populate('user')
             .lean(); //try removing this and look at data
+        // console.log("member orgin", member)
 
         if (!member) {
             return res.status(404).send('Not found.');
         }
 
-        if(member.Dependents.length > 0){
+        if(member.length > 1){
+            member = member.find(el => el.Email === req.session.user.email)
+        } else{
+            member = member[0];
+        }
+        // console.log(member)
+
+        if(member.Dependents && member.Dependents.length > 0){
             let dependents = [];
             for (let index = 0; index < member.Dependents.length; index++) {
                 let temp = await Member.findById(member.Dependents[index]);
@@ -68,7 +87,6 @@ router.post('/', ensureAuth, async (req, res) => {
               return res.status(400).send("Member not valid");
           }
 
-        //req.body.req.user.id;
         console.log(m);
         const member = await Member.create(m);
         if (member) {

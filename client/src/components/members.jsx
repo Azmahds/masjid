@@ -33,7 +33,7 @@ class Members extends Component {
 
   async componentDidMount() {
     try {
-      const res = await axios.get("/members/");
+      const res = await axios.get("/members/ensure-admin-request");
       this.setState({ members: res.data, error: "" });
     } catch (e) {
       this.setState({ error: e.message });
@@ -256,32 +256,36 @@ class Members extends Component {
       const variant = "danger";
       return <Alert variant={variant}>{this.state.error}</Alert>;
     }
-    let i = this.state.members.length + 1000;
-    // const streets = getStreets(this.state.members,
-    //   this.context.state.searchText.toLocaleUpperCase()
-    // );
-    const streets = [];
-    const { tempmember } = this.state;
 
-    let component;
-    var rows = [];
-    let memData = this.state.members;
+      let i = this.state.members.length + 1000;
+      const streets = [];
+      const { tempmember } = this.state;
 
-    {
-      streets.map((street) => {
-        rows.push(
-          <Street
-            key={i++}
-            street={street}
-            addMember={this.addNewMember}
-            removeMember={this.removeMember}
-            updateMember={this.updateMember}
-          />
-        );
-      });
-    }
+      let component; 
+      var rows = [];
+      let memData = this.state.members.filter(m => m.Guardians.length == 0);
 
-    // if(1){
+      // {streets.map((street) => {
+      //   rows.push(
+      //     <Street
+      //       key={i++}
+      //       street={street}
+      //       addMember={this.addNewMember}
+      //       removeMember={this.removeMember}
+      //       updateMember={this.updateMember}
+      //     />
+      //   );
+      //   });
+      // }
+    
+    // if(this.state.members.length === 0){
+    //   return (
+    //     <React.Fragment>
+    //       <div>NO MEMBERS TO DISPLAY</div>
+    //     </React.Fragment>
+    //   );
+    // }
+
     component = (
       <React.Fragment>
         <MemberEdit
@@ -298,13 +302,6 @@ class Members extends Component {
         <div>
           <div>
             <h1 className="ml-5 mt-3">Member</h1>
-            <Button
-              className="addbutton"
-              variant="dark"
-              onClick={this.handleAddNewMemberButtonClick}
-            >
-              Add Member
-            </Button>
           </div>
           <PaginationTable
             id="AdminDataTable"
@@ -314,108 +311,6 @@ class Members extends Component {
         </div>
       </React.Fragment>
     );
-    // }
-
-    // else if( 0 ) {
-    //   component =
-    //     <React.Fragment>
-    //     <MemberEdit
-    //       member={tempmember}
-    //       show={this.state.modalShow}
-    //       onCancel={this.handleMemberEditCancel}
-    //       onSave={this.handleMemberEditSave}
-    //     />
-    //     <div id="inline">
-    //       <h1 className="ml-5 mt-3 mb-3">
-    //         Member
-    //         </h1>
-    //         <Button  onClick={this.handleAddNewMemberButtonClick} className="addbutton mb-2">Add Member</Button>
-    //       {/* <Button className="mb-3" onClick={this.handleAddNewMemberButtonClick}>Add Member</Button> */}
-    //     </div>
-    //     <div id="inline">
-    //       <div class="FilterTable ml-4">
-    //         <h4 class="center mt-3">Filter</h4>
-    //           <Form className="fsearch">
-    //             <FormControl
-    //               id="myInput"
-    //               type="search"
-    //               placeholder="Search"
-    //               className="mr-2"
-    //               aria-label="Search"
-    //             />
-    //             <div class="mt-3">
-    //               <Form.Check
-    //                   type='checkbox'
-    //                   id='IdCheck'
-    //                   label="Id"
-    //                   defaultChecked={true}
-    //               />
-    //               <Form.Check
-    //                     type='checkbox'
-    //                     id='NameCheck'
-    //                     label="Name"
-    //               />
-    //               <Form.Check
-    //                     type='checkbox'
-    //                     id='PhoneCheck'
-    //                     label="Phone Number"
-    //               />
-    //               <Form.Check
-    //                   type='checkbox'
-    //                   id='AddressCheck'
-    //                   label="Address"
-    //               />
-    //               <Form.Check
-    //                   type='checkbox'
-    //                   id='VillageCheck'
-    //                   label="Village"
-    //               />
-    //               <Form.Check
-    //                   type='checkbox'
-    //                   id='StatusCheck'
-    //                   label="Member Status"
-    //               />
-    //             </div>
-    //           </Form>
-    //       </div>
-
-    //       <div class="AdminTable">
-    //         <Table className="backwhite" id="ATable">
-
-    //         <thead class="center tableheader">
-    //           <tr>
-    //             <th>Id</th>
-    //             <th>Name</th>
-    //             <th>Phone Number</th>
-    //             <th>Address</th>
-    //             <th>Village</th>
-    //             <th>Membership Status</th>
-    //             <th>View Full Info</th>
-    //           </tr>
-    //         </thead>
-    //         <tbody>
-    //               {rows}
-    //         </tbody>
-    //       </Table>
-    //     </div>
-    //   </div>
-    //   </React.Fragment>;
-    // }
-
-    // else {
-    //   component =
-    //     <React.Fragment>
-    //     <MemberEdit
-    //       member={tempmember}
-    //       show={this.state.modalShow}
-    //       onCancel={this.handleMemberEditCancel}
-    //       onSave={this.handleMemberEditSave}
-    //     />
-    //   <div>
-    //     <Button onClick={this.handleAddNewMemberButtonClick}>Add Member</Button>
-    //   </div>
-    //   </React.Fragment>
-    // }
 
     return component;
   }

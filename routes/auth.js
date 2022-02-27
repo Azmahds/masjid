@@ -4,7 +4,8 @@ const AuthorisedUser = require('../models/AuthorisedUser');
 const passport = require('passport');
 const router = express.Router();
 
-const { OAuth2Client } = require('google-auth-library')
+const { OAuth2Client } = require('google-auth-library');
+const { session } = require('passport');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 router.post('/google', async (req, res) => {
@@ -32,9 +33,11 @@ router.post('/google', async (req, res) => {
         ).lean();
 
         if(!authoriseduser) {
-            return res.status(401).send("Unauthorized");
-        } 
-
+            user.type = "user";
+            // return res.status(401).send("Unauthorized");
+        } else{
+            user.type = "admin";
+        }
         req.session.user = user;
 
         return res.status(201).send(user);
